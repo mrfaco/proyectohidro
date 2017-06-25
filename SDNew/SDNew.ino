@@ -5,7 +5,7 @@
 #include <avr/wdt.h>
 #include <LiquidCrystal.h>
 
-const int waitingTime = 400;
+const int waitingTime = 66;
 const int sdPin=A0;
 const int lcdPowerPin = A4;
 const int xbeeSleep=1;
