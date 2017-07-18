@@ -147,14 +147,13 @@ ISR(WDT_vect)
  *  Description: Enters the arduino into sleep mode.
  *
  ***************************************************/
-void enterSleep(void)
+void enterSleep()
 {
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   ADCSRA &= ~(1<<7);
   //for (int j=0;j<2;j++){
   do{
   sleep_enable();
-  
   MCUCR |= (3 << 5); //set both BODS and BODSE at the same time
   MCUCR = (MCUCR & ~(1 << 5)) | (1 << 6); 
   sleep_mode();
@@ -163,10 +162,26 @@ void enterSleep(void)
   delay(50);
   RTC.read(tm);
   digitalWrite(alim_clock,LOW);
-  }while(tm.Minute==mini+10);
+  }while(CheckIfItIsTime(mini,tm.Minute,tm.Second)==false);
   ADCSRA |= (1<<7);
- 
 }
+bool CheckIfItIsTime(int lastcheck,int minutes,int seconds){
+  if(seconds<10||seconds>58){
+    if (minutes==lastcheck)
+        {
+          return true;
+        }
+        else
+        {
+          return false;
+        }
+  }
+  else{
+    return false;
+  }
+}
+
+
 //////////////////////////////////////
 //*************SETUP***************//
 void setup() {

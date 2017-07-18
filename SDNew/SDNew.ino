@@ -5,15 +5,20 @@
 #include <avr/wdt.h>
 #include <LiquidCrystal.h>
 
-const int waitingTime = 66;
+const int waitingTime = 398;
 const int sdPin=A0;
 const int lcdPowerPin = A4;
 const int xbeeSleep=1;
 const int xbeeAwake=0;
-const int xbeePin=A3;
-const unsigned long waitedTooMuch=63000;
+const int xbeePin=A3; 
+const unsigned long waitedTooMuch=120000;
 LiquidCrystal lcd(9,8,7,6,5,4);
 String GlobalDataStringForLCD = "";
+  unsigned long wait=0;
+  String result = "";
+  bool exitLoop=false;
+  int skippedTime = 0;
+  unsigned long t0=0;
 
 
 ///////INTERRUPCIONES//////////
@@ -39,6 +44,7 @@ void setup() {
   digitalWrite(A4,HIGH);
   lcd.begin(16, 2);
   digitalWrite(A4,LOW);
+
 }
 
 void ShowLCD () {
@@ -157,26 +163,26 @@ void GoToSleep(int skippedTime){
 
 void loop() {
   // put your main code here, to run repeatedly:
-  unsigned long wait=0;
-  WaitForData();
-  String result = "";
-  bool exitLoop=false;
-  int skippedTime = 0;
+  wait=0;
+  result = "";
+  exitLoop=false;
+  skippedTime = 0;
   while(exitLoop==false)
   {
-    wait=millis();
-    result = ReadIncomingData();
-    
-    if(result==""){
-      if(wait>waitedTooMuch){
-        skippedTime=2;
-        exitLoop=true;
-      }
+    t0=millis();
+    while(!Serial.available()&&wait<waitedTooMuch)
+    {
+      wait=millis()-t0;
     }
-    
+    result = ReadIncomingData();
+    if(result==""){
+        skippedTime=(int)wait/1000/9;
+        GlobalDataStringForLCD="Lost it";
+        exitLoop=true;
+    }
     else{
       int skippedTime=0;
-      WriteData(result);
+      WriteData(result+" wtime = "+String(wait));
       GlobalDataStringForLCD = result;
       exitLoop=true;
     }
@@ -186,3 +192,4 @@ void loop() {
   GoToSleep(skippedTime);
   TurnEverythingOnAgain();
 }
+ 
